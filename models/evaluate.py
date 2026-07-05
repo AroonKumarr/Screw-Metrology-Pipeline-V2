@@ -200,6 +200,13 @@ def evaluate_model(
                     img = None
                 
                 if img is not None:
+                    # Resize original image to match mask resolution for visualization overlay
+                    mask_h, mask_w = img.shape[:2]
+                    if len(gt_masks) > 0:
+                        mask_h, mask_w = gt_masks.shape[1:]
+                    elif len(pred_masks) > 0:
+                        mask_h, mask_w = pred_masks.shape[1:]
+                    img = cv2.resize(img, (mask_w, mask_h))
                     h, w = img.shape[:2]
                     
                     # Create masks overlay
