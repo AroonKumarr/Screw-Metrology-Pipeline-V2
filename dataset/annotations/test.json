@@ -1,0 +1,281 @@
+{
+  "info": {
+    "year": "2026",
+    "version": "dataset",
+    "description": "Exported from roboflow.com",
+    "contributor": "",
+    "url": "https://public.roboflow.com/object-detection/undefined",
+    "date_created": "2026-07-04T17:25:45+00:00"
+  },
+  "licenses": [
+    {
+      "id": 1,
+      "url": "https://creativecommons.org/licenses/by/4.0/",
+      "name": "CC BY 4.0"
+    }
+  ],
+  "categories": [
+    {
+      "id": 0,
+      "name": "object",
+      "supercategory": "none"
+    },
+    {
+      "id": 1,
+      "name": "object",
+      "supercategory": "object"
+    }
+  ],
+  "images": [
+    {
+      "id": 47,
+      "license": 1,
+      "file_name": "IMG_4773_JPG.rf.eu6bjGImcYUVBbBmyFH8.JPG",
+      "height": 5712,
+      "width": 4284,
+      "date_captured": "2026-07-04T17:25:45+00:00",
+      "extra": {
+        "name": "IMG_4773.JPG"
+      }
+    },
+    {
+      "id": 1,
+      "license": 1,
+      "file_name": "IMG_4767_JPG.rf.670aW7eIt0Bm5crBOl1L.JPG",
+      "height": 5712,
+      "width": 4284,
+      "date_captured": "2026-07-04T17:25:45+00:00",
+      "extra": {
+        "name": "IMG_4767.JPG"
+      }
+    },
+    {
+      "id": 7,
+      "license": 1,
+      "file_name": "IMG_4744_JPG.rf.ocE2UEFBSS1EZsNLX3gG.JPG",
+      "height": 5712,
+      "width": 4284,
+      "date_captured": "2026-07-04T17:25:45+00:00",
+      "extra": {
+        "name": "IMG_4744.JPG"
+      }
+    },
+    {
+      "id": 40,
+      "license": 1,
+      "file_name": "IMG_4780_JPG.rf.YzqRmvrfgDyYx2FaoMv5.JPG",
+      "height": 5712,
+      "width": 4284,
+      "date_captured": "2026-07-04T17:25:45+00:00",
+      "extra": {
+        "name": "IMG_4780.JPG"
+      }
+    }
+  ],
+  "annotations": [
+    {
+      "id": 2,
+      "image_id": 1,
+      "category_id": 1,
+      "bbox": [
+        3154,
+        4655,
+        124,
+        309
+      ],
+      "iscrowd": 0,
+      "area": 38316,
+      "segmentation": [
+        [
+          3160,
+          4663,
+          3154,
+          4669,
+          3156,
+          4690,
+          3186,
+          4730,
+          3193,
+          4768,
+          3190,
+          4869,
+          3203,
+          4947,
+          3207,
+          4957,
+          3220,
+          4964,
+          3229,
+          4948,
+          3247,
+          4871,
+          3245,
+          4742,
+          3251,
+          4727,
+          3272,
+          4710,
+          3278,
+          4690,
+          3266,
+          4669,
+          3233,
+          4656,
+          3190,
+          4655
+        ]
+      ]
+    },
+    {
+      "id": 8,
+      "image_id": 7,
+      "category_id": 1,
+      "bbox": [
+        3303,
+        1956,
+        295,
+        114
+      ],
+      "iscrowd": 0,
+      "area": 33630,
+      "segmentation": [
+        [
+          3305,
+          1991,
+          3303,
+          1995,
+          3309,
+          2013,
+          3353,
+          2024,
+          3381,
+          2024,
+          3429,
+          2033,
+          3525,
+          2036,
+          3541,
+          2042,
+          3578,
+          2070,
+          3591,
+          2052,
+          3598,
+          1969,
+          3591,
+          1956,
+          3538,
+          1982,
+          3506,
+          1987,
+          3473,
+          1980,
+          3379,
+          1977,
+          3339,
+          1980
+        ]
+      ]
+    },
+    {
+      "id": 41,
+      "image_id": 40,
+      "category_id": 1,
+      "bbox": [
+        3780,
+        3535,
+        259,
+        157
+      ],
+      "iscrowd": 0,
+      "area": 40663,
+      "segmentation": [
+        [
+          3783,
+          3536,
+          3780,
+          3541,
+          3784,
+          3547,
+          3827,
+          3582,
+          3950,
+          3643,
+          3971,
+          3662,
+          3993,
+          3692,
+          4009,
+          3689,
+          4039,
+          3625,
+          4038,
+          3599,
+          4006,
+          3604,
+          3983,
+          3603,
+          3885,
+          3559,
+          3829,
+          3540,
+          3807,
+          3535
+        ]
+      ]
+    },
+    {
+      "id": 48,
+      "image_id": 47,
+      "category_id": 1,
+      "bbox": [
+        2670,
+        3337,
+        193,
+        259
+      ],
+      "iscrowd": 0,
+      "area": 49987,
+      "segmentation": [
+        [
+          2670,
+          3572,
+          2670,
+          3587,
+          2682,
+          3596,
+          2709,
+          3581,
+          2745,
+          3539,
+          2787,
+          3463,
+          2847,
+          3420,
+          2863,
+          3404,
+          2863,
+          3381,
+          2841,
+          3358,
+          2819,
+          3343,
+          2804,
+          3338,
+          2775,
+          3337,
+          2769,
+          3342,
+          2763,
+          3398,
+          2751,
+          3423,
+          2722,
+          3458,
+          2698,
+          3496
+        ]
+      ]
+    }
+  ]
+}

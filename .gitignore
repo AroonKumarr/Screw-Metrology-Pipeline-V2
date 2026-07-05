@@ -1,0 +1,24 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Large Model Weights (exceeds GitHub's 100MB file upload limit)
+models/weights/*.pth
+models/weights/*.pth.tar
+
+# Local Outputs & Logs
+outputs/
+calibration/output/visualizations/
+dataset/undistorted/
+*.log
