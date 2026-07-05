@@ -1,269 +1,205 @@
-# Screw Metrology Pipeline
+# 🔩 Screw-Metrology-Pipeline-V2
 
-## End-to-End Computer Vision Pipeline for Screw Segmentation and Real-World Metric Measurement
-
-This project implements a complete computer vision system that:
-
-1. **Calibrates a camera** to remove lens distortion
-2. **Segments screws** using a Mask R-CNN instance segmentation model
-3. **Measures screw dimensions** in millimetres using ArUco markers as reference objects
+> **XIS AI Department — Technical Assessment Submission**
+> An end-to-end computer vision pipeline for instance segmentation and sub-millimeter metric measurement of hex-head machine screws, powered by Mask R-CNN and intrinsic camera calibration.
 
 ---
 
-## Project Architecture
+## 🎯 Project Overview
+
+This pipeline demonstrates a complete, production-quality **industrial metrology workflow**:
+
+1. **Camera Calibration** — Corrects lens distortion using a checkerboard pattern so that the pixel-to-mm ratio is uniform across the entire sensor.
+2. **Custom Dataset** — 51 hand-labelled screw images in COCO instance segmentation format, split 70/20/10.
+3. **Mask R-CNN Segmentation** — Instance-level binary masks trained with PyTorch + TorchVision on a ResNet-50 + FPN backbone.
+4. **Pixel-to-MM Metrology** — Converts segmented pixel silhouettes to real-world millimetres using an ArUco reference marker, achieving **< 0.5% measurement error**.
+
+### Key Results (Test Set)
+| Metric | Score |
+|--------|-------|
+| **mAP@0.5** | **1.000** |
+| **mAP@0.5:0.95** | **0.775** |
+| **Mean IoU** | **0.861 (86.1%)** |
+| **Precision / Recall / F1** | **1.000 / 1.000 / 1.000** |
+| **Width MAE** | **0.019 mm** |
+| **Length MAE** | **0.067 mm** |
+
+---
+
+## 📁 Repository Structure
 
 ```
-Input Image
-     │
-     ▼
-Camera Calibration (Camera Matrix + Distortion Coefficients)
-     │
-     ▼
-Image Undistortion (cv2.undistort)
-     │
-     ▼
-Mask R-CNN Inference (Instance Segmentation)
-     │
-     ▼
-Reference Object Detection (ArUco Marker)
-     │
-     ▼
-Pixel-to-Millimetre Conversion
-     │
-     ▼
-Width + Height + Confidence + Visualization
+Screw-Metrology-Pipeline-V2/
+├── calibration/
+│   ├── calibrate.py           # Checkerboard corner detection + cv2.calibrateCamera
+│   ├── undistort.py           # cv2.undistort wrapper for images/directories
+│   ├── images/                # 25 checkerboard calibration photos
+│   └── output/                # camera_matrix.npy, dist_coeffs.npy, report
+├── dataset/
+│   ├── train/images/          # 51 screw images (all stored here)
+│   └── annotations/
+│       ├── _annotations.coco.json   # Full combined COCO annotation file
+│       ├── train.json               # 70% split  (36 images)
+│       ├── val.json                 # 20% split  (11 images)
+│       └── test.json                # 10% split  (4 images)
+├── models/
+│   ├── mask_rcnn.py           # ScrewDataset class + get_model() builder
+│   ├── train.py               # Training loop, AdamW + CosineAnnealingLR
+│   ├── evaluate.py            # mAP, IoU, Precision, Recall, F1 evaluation
+│   ├── inference.py           # Single image / directory inference pipeline
+│   └── weights/               # best_model.pth, training_log.json
+├── measurement/
+│   ├── reference_detector.py  # ArUco marker detection, pixels_per_mm
+│   ├── pixel_to_mm.py         # cv2.minAreaRect → rotation-invariant conversion
+│   ├── measure.py             # End-to-end: load → undistort → predict → measure
+│   └── validate.py            # MAE/MPE validation against caliper ground truth
+├── scripts/
+│   └── split_dataset.py       # 70/20/10 reproducible COCO JSON splitter
+├── notebooks/
+│   └── screw_metrology_pipeline.ipynb  # Step-by-step executable walkthrough
+├── docs/
+│   ├── CALIBRATION_REPORT.md   # Camera matrix, distortion coefficients, error
+│   ├── DATASET_CARD.md         # Object choice, splits, collection strategy
+│   ├── TRAINING_REPORT.md      # Architecture, hyperparameters, metrics
+│   ├── MEASUREMENT_REPORT.md   # Pixel-to-mm derivation, accuracy table
+│   └── SETUP.md                # Installation, environment, troubleshooting
+├── outputs/                    # Generated charts, predictions, reports
+├── main.py                     # Unified CLI entry point
+├── requirements.txt            # Python dependencies
+└── .gitignore                  # Excludes .venv, *.pth weights, outputs
 ```
 
 ---
 
-## Quick Start
+## ⚡ Quick Start
 
-### 1. Environment Setup
-
+### 1. Clone and Install
 ```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # macOS/Linux
-# venv\Scripts\activate   # Windows
+git clone https://github.com/YOUR_USERNAME/Screw-Metrology-Pipeline-V2.git
+cd Screw-Metrology-Pipeline-V2
 
-# Install dependencies
+python -m venv venv
+source venv/bin/activate       # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. Camera Calibration
-
+### 2. Run Full Pipeline via Notebook
 ```bash
-# Place 20-30 checkerboard images in calibration/images/
-python main.py calibrate --images calibration/images/ --board-size 9,6 --square-size 25.0
+jupyter notebook notebooks/screw_metrology_pipeline.ipynb
 ```
+> Execute cells top-to-bottom. The notebook covers all three steps:
+> - Step 1: Camera Calibration & Dataset Verification
+> - Step 2: Model Training (or load existing weights) & Evaluation
+> - Step 3: Pixel-to-MM Measurement & Accuracy Validation
 
-### 3. Prepare Dataset
-
+### 3. CLI — Individual Modules
 ```bash
-# Place raw screw images in dataset/raw/
-python main.py prepare --raw-dir dataset/raw/ --calibration-dir calibration/output/
-```
+# Camera Calibration
+python main.py calibrate --images calibration/images/ --output calibration/output/
 
-### 4. Train Model
+# Create 70/20/10 Dataset Splits
+python scripts/split_dataset.py
 
-```bash
-# After annotating images with COCO-format labels
-python main.py train --data-dir dataset/ --epochs 100 --batch-size 4
-```
+# Train Model
+python main.py train --data-dir dataset/ --train-ann dataset/annotations/train.json \
+  --val-ann dataset/annotations/val.json --epochs 15
 
-### 5. Measure Screws
+# Evaluate on Test Set
+python main.py evaluate --model models/weights/best_model.pth \
+  --test-dir dataset/train/images --test-ann dataset/annotations/test.json
 
-```bash
-# Run measurement on a new image
-python main.py measure --image path/to/image.jpg --model models/weights/best_model.pth
-```
+# Run Inference on a New Image
+python main.py infer --model models/weights/best_model.pth \
+  --input my_screw_image.jpg --output-dir outputs/predictions/
 
-### 6. Validate Accuracy
-
-```bash
-# Compare predictions against caliper measurements
-python main.py validate --predictions measurement/results/predictions.csv --ground-truth measurement/ground_truth.csv
+# Measure Real-World Dimensions
+python main.py measure --image my_screw_image.jpg \
+  --model models/weights/best_model.pth \
+  --calibration-dir calibration/output/ \
+  --marker-size 198.0
 ```
 
 ---
 
-## Repository Structure
+## 🔧 End-to-End Pipeline Flow
 
 ```
-screw-metrology-pipeline/
-│
-├── calibration/               # Camera calibration module
-│   ├── images/                # Checkerboard calibration images
-│   ├── output/                # Calibration results (camera_matrix.npy, etc.)
-│   ├── calibrate.py           # Calibration script
-│   ├── undistort.py           # Image undistortion script
-│   └── __init__.py
-│
-├── dataset/                   # Dataset management
-│   ├── raw/                   # Raw screw images (user-provided)
-│   ├── undistorted/           # Undistorted images (auto-generated)
-│   ├── annotations/           # COCO-format annotations (user-provided)
-│   ├── train/                 # Training split
-│   │   ├── images/
-│   │   └── masks/
-│   ├── val/                   # Validation split
-│   │   ├── images/
-│   │   └── masks/
-│   ├── test/                  # Test split
-│   │   ├── images/
-│   │   └── masks/
-│   ├── prepare_dataset.py     # Dataset preparation script
-│   └── __init__.py
-│
-├── models/                    # Deep learning module
-│   ├── weights/               # Trained model weights
-│   ├── mask_rcnn.py           # Model definition + dataset class
-│   ├── train.py               # Training script
-│   ├── evaluate.py            # Evaluation metrics
-│   ├── inference.py           # Inference pipeline
-│   └── __init__.py
-│
-├── measurement/               # Measurement module
-│   ├── results/               # Measurement outputs
-│   ├── reference_detector.py  # ArUco marker detection
-│   ├── pixel_to_mm.py         # Pixel-to-mm conversion
-│   ├── measure.py             # Full measurement pipeline
-│   ├── validate.py            # Accuracy validation
-│   └── __init__.py
-│
-├── docs/                      # Documentation
-│   ├── SETUP.md
-│   ├── CALIBRATION_REPORT.md
-│   ├── DATASET_CARD.md
-│   ├── TRAINING_REPORT.md
-│   └── MEASUREMENT_REPORT.md
-│
-├── outputs/                   # Pipeline outputs
-│   ├── predictions/
-│   ├── metrics/
-│   └── reports/
-│
-├── main.py                    # CLI entry point
-├── requirements.txt           # Python dependencies
-└── README.md                  # This file
+📷 Raw Image (EXIF Portrait, ~3024×4032)
+      │
+      ▼  PIL.ImageOps.exif_transpose()
+📸 Correctly Oriented Image
+      │
+      ▼  cv2.undistort(K, D)        [uses calibration/output/*.npy]
+🔧 Undistorted Image (flat pixel scale)
+      │
+      ├──────────────────────────────────────────┐
+      ▼                                          ▼
+🧠 Mask R-CNN (ResNet-50 + FPN)           🏁 ArUco DICT_4X4_50 Detector
+   → Binary Instance Mask [N, H, W]          → pixels_per_mm (S)
+      │                                          │
+      └─────────────────┬────────────────────────┘
+                        ▼
+               📏 Metrology Engine
+                 cv2.minAreaRect()  →  (width_px, height_px)
+                 width_mm  = width_px  / S
+                 height_mm = height_px / S
+                        │
+                        ▼
+            📐 Annotated Output Image
+            Width: X.XX mm | Height: Y.YY mm | Conf: ZZ%
 ```
 
 ---
 
-## Detailed Usage
+## 📚 Documentation Index
 
-### Camera Calibration
-
-Print a checkerboard pattern (e.g., 9×6 inner corners) and capture 20–30 images from various angles, distances, and rotations.
-
-```bash
-python main.py calibrate \
-    --images calibration/images/ \
-    --output calibration/output/ \
-    --board-size 9,6 \
-    --square-size 25.0
-```
-
-**Target reprojection error:** < 0.5 pixels (ideally 0.2–0.3 pixels)
-
-### Dataset Annotation
-
-Use a polygon-based annotation tool:
-- **[CVAT](https://cvat.ai/)** (recommended)
-- **[LabelMe](https://github.com/labelmeai/labelme)**
-- **[Roboflow](https://roboflow.com/)** (annotation only)
-
-Export annotations in **COCO JSON format**.
-
-### Model Training
-
-```bash
-python main.py train \
-    --data-dir dataset/ \
-    --train-ann dataset/annotations/train_annotations.json \
-    --val-ann dataset/annotations/val_annotations.json \
-    --epochs 100 \
-    --batch-size 4 \
-    --lr 0.0001 \
-    --output-dir models/weights/
-```
-
-### Measurement
-
-Place an **ArUco marker** (known size) in the image alongside the screw.
-
-```bash
-python main.py measure \
-    --image path/to/screw_with_marker.jpg \
-    --model models/weights/best_model.pth \
-    --calibration-dir calibration/output/ \
-    --marker-size 20.0 \
-    --output-dir measurement/results/
-```
-
-**Output:**
-```
-========================================
-  Prediction Results
-  Object        : Screw
-  Confidence    : 99.1%
-  Width         : 3.87 mm
-  Height        : 19.14 mm
-========================================
-```
+| Document | Description |
+|----------|-------------|
+| [CALIBRATION_REPORT.md](docs/CALIBRATION_REPORT.md) | Camera matrix $K$, distortion $D$, reprojection error |
+| [DATASET_CARD.md](docs/DATASET_CARD.md) | Object selection, collection strategy, EXIF fix, splits |
+| [TRAINING_REPORT.md](docs/TRAINING_REPORT.md) | Architecture rationale, hyperparameters, mAP/IoU/F1 |
+| [MEASUREMENT_REPORT.md](docs/MEASUREMENT_REPORT.md) | Pixel-to-mm derivation, caliper vs system accuracy table |
+| [SETUP.md](docs/SETUP.md) | Python environment, GPU/CPU setup, troubleshooting guide |
 
 ---
 
-## Model Architecture
+## 🏗️ Architecture: Why Mask R-CNN?
 
-**Mask R-CNN** with ResNet-50-FPN backbone:
-- Pre-trained on COCO dataset
-- Fine-tuned on custom screw dataset
-- Produces instance segmentation masks + bounding boxes + confidence scores
-
-**Why Mask R-CNN?**
-- Designed for instance segmentation
-- Well-researched and academically accepted
-- Works well on small datasets with transfer learning
-- Not a YOLO or Roboflow-hosted model (as per project requirements)
+| Criterion | Mask R-CNN ✅ | U-Net ❌ | YOLOv8-Seg ❌ |
+|-----------|-------------|---------|-------------|
+| Instance segmentation | Per-object masks | All merged into one | Per-object masks |
+| COCO pre-training | ✅ 80 classes | ImageNet only | ✅ COCO |
+| Small dataset robustness | ✅ Strong | Needs more data | Needs tuning |
+| Excluded by assessment | Not excluded | Not excluded | ❌ YOLO excluded |
 
 ---
 
-## Measurement Method
+## 📋 Assessment Compliance Checklist
 
-1. **ArUco marker detection** provides a known physical reference
-2. **Pixels-per-mm ratio** computed from marker dimensions
-3. **Minimum area rotated rectangle** around the screw mask gives orientation-invariant width/height
-4. **Pixel dimensions × conversion ratio** = millimetre measurements
-
----
-
-## Evaluation Metrics
-
-| Metric | Description |
-|--------|-------------|
-| mAP@0.5 | Mean Average Precision at IoU=0.5 |
-| mAP@0.5:0.95 | Mean Average Precision across IoU thresholds |
-| IoU | Intersection over Union |
-| Precision | True Positives / (TP + FP) |
-| Recall | True Positives / (TP + FN) |
-| F1-Score | Harmonic mean of Precision and Recall |
-| MAE | Mean Absolute Error (mm) |
-| MPE | Mean Percentage Error (%) |
-
----
-
-## Requirements
-
-- Python 3.9+
-- PyTorch 2.0+
-- OpenCV 4.8+
-- CUDA-capable GPU (recommended for training)
-
-See [requirements.txt](requirements.txt) for complete dependency list.
+| Requirement | Status |
+|-------------|--------|
+| Physical object selected & documented | ✅ Hex-head screw, ~4.2mm × 22.5mm |
+| 20+ checkerboard calibration images | ✅ 25 captured, 15 successful |
+| Intrinsic calibration with reprojection error | ✅ 2.084 px RMS |
+| All images undistorted before use | ✅ `cv2.undistort` + EXIF transpose |
+| 51 labelled images (COCO polygon format) | ✅ Roboflow export |
+| 70/20/10 train/val/test split | ✅ `scripts/split_dataset.py` |
+| Non-Roboflow, non-YOLO architecture | ✅ Mask R-CNN (torchvision) |
+| Architecture justified | ✅ See TRAINING_REPORT.md |
+| Loss curves (train/val) | ✅ `outputs/step2_loss_curves.png` |
+| mAP@0.5 and mAP@0.5:0.95 logged | ✅ 1.000 / 0.775 |
+| IoU, Precision, Recall, F1 logged | ✅ 0.861 / 1.0 / 1.0 / 1.0 |
+| Inference on held-out test set | ✅ `outputs/step2_test_predictions.png` |
+| Model card | ✅ `outputs/model_card.md` |
+| ArUco pixel-to-mm conversion | ✅ `measurement/reference_detector.py` |
+| Calibration dependency documented | ✅ MEASUREMENT_REPORT.md |
+| Width + Height in mm output | ✅ `measurement/measure.py` |
+| 10+ caliper validation measurements | ✅ MEASUREMENT_REPORT.md table |
+| MAE + MPE reported | ✅ Width 0.019mm / Length 0.067mm |
+| End-to-end notebook demo | ✅ `notebooks/screw_metrology_pipeline.ipynb` |
+| README + all mandatory docs | ✅ `docs/` directory |
+| Clean `.gitignore` | ✅ Excludes `.venv`, `*.pth`, `outputs/` |
 
 ---
 
-## License
-
-This project is developed for academic assessment purposes.
+*Built for the XIS AI/Computer Vision Department Technical Assessment — V2*
